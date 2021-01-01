@@ -1,14 +1,10 @@
 import datetime
-import time
 from os import path
-import os
-import random
 import numpy as np
 import matplotlib.pyplot as plt
 
 def initialize(date, rewards_doc):
-    date = date.strftime("%x") + ".txt"
-    date = date.replace("/", "-")
+    """Runs main program loop that allows functions to be used as user inputs"""
 
     while True:
         print("Possible Actions:\n")
@@ -16,7 +12,7 @@ def initialize(date, rewards_doc):
         print("2 - View")
         print("3 - Graph")
         print("4 - Organize")
-        print("5 - Close")
+        print("Press any other key to close")
         print("")
         action = input("Action\n")
 
@@ -30,7 +26,7 @@ def initialize(date, rewards_doc):
             record_activity(activity, time_spent, date)
 
             # updates reward point document
-            update_reward_points(None, time_spent)
+            update_reward_points(None, time_spent, rewards_doc)
 
         elif action == "2": # view
             view_activities(date)
@@ -41,18 +37,34 @@ def initialize(date, rewards_doc):
         elif action == "4": # organize
             organize_document(date)
 
-        elif action == "5": #close
+        else: # close
             break
-
-        else:
-            print("Invalid Action")
 
         print("\n")
 
 
+def get_date():
+    """Returns the date"""
+    day = datetime.datetime.now()
+    return day
+
+
+def convert_date_to_valid_name(date):
+    """Given a date by datetime.datetime.now(), convert it into a valid name for txt files"""
+    date = date.strftime("%x") + ".txt"
+    date = date.replace("/", "-")
+    return date
+
+
+def print_date(date):
+    """Given a date, print out the following message"""
+    print("Today's date: " + date)
+
+
 def record_activity(activity, time_spent, filename):
-    # given an activity, time spent on activity, and the date in file name format, records the activity information on the file 'filename.txt'
-    print("Today's date: " + filename)
+    """given an activity, time spent on activity, and the date in file name format,
+    records the activity information on the file 'filename.txt'"""
+    print_date(filename)
 
     # checks whether the file already exists or not, if not, creates a new file
     if path.exists(filename):
@@ -64,14 +76,16 @@ def record_activity(activity, time_spent, filename):
     t = datetime.datetime.now()
 
     # records the activity and time spent with the time when the activity was completed
-    f.write(t.strftime("%X") + ": " + activity + ": " + str(time_spent) + "\n")
+    f.write(t.strftime("%X") + ": " + activity + ": " + str(time_spent))
     f.close()
 
 
 def view_activities(filename):
+    """prints the files' activities if the file exists"""
+    print_date(filename)
+
     # checks whether the day's file exists, then prints files' contents if it does
     if path.exists(filename):
-        print("Today's date: " + filename)
         f = open(filename)
         text = f.read()
         f.close()
@@ -83,7 +97,7 @@ def view_activities(filename):
 
 
 def graph_activities(filename):
-    # graphs the daily activities and times spent using data from a file
+    """graphs the daily activities and times spent as a bar graph using data from a file"""
 
     f = open(filename)
     lines = f.readlines()
@@ -111,7 +125,8 @@ def graph_activities(filename):
 
 
 def organize_document(filename):
-    # given a file with various activities and times, combine all instances of the same activity together and add all times up
+    """given a file with various activities and times,
+    combine all instances of the same activity together and add all times up"""
     f = open(filename)
     lines = f.readlines()
 
@@ -134,9 +149,12 @@ def organize_document(filename):
         new.write(t.strftime("%X") + ": " + key + ": " + str(dict[key]) + "\n")
     new.close()
 
+    print_date(filename)
+    print("Successfully organized")
 
-def update_reward_points(activity_type, time_spent):
-    # changes the rewards document based on activity data
+
+def update_reward_points(activity_type, time_spent, rewards_doc):
+    """changes the rewards document values based on activity data"""
     f = open(rewards_doc)
     f_lines = f.readlines()
 
@@ -160,6 +178,10 @@ def update_reward_points(activity_type, time_spent):
     new.close()
 
 
+def create_awards_file():
+    """Creates the rewards file and sets it up"""
+
+    pass
 
 
 # TODO: Add different categories of activities as choices before activity name is entered as an input
@@ -175,14 +197,9 @@ def update_reward_points(activity_type, time_spent):
 
 # TODO: create calendar which shows activities done in a day
 
-def create_awards_file():
-    """Creates the rewards file and sets it up"""
-
-    pass
-
 
 if __name__ == "__main__":
-    day = datetime.datetime.now()
+    date = convert_date_to_valid_name(get_date())
+    print_date(date)
     rewards_doc = "Rewards.txt"
-    print("Date: " + day.strftime("%x"))
-    initialize(day, rewards_doc)
+    initialize(date, rewards_doc)
