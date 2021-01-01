@@ -3,6 +3,7 @@ from os import path
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def initialize(date, rewards_doc):
     """Runs main program loop that allows functions to be used as user inputs"""
 
@@ -25,9 +26,6 @@ def initialize(date, rewards_doc):
             # records activity data in daily document
             record_activity(activity, time_spent, date)
 
-            # updates reward point document
-            update_reward_points(None, time_spent, rewards_doc)
-
         elif action == "2": # view
             view_activities(date)
 
@@ -43,17 +41,22 @@ def initialize(date, rewards_doc):
         print("\n")
 
 
-def get_date():
-    """Returns the date"""
-    day = datetime.datetime.now()
-    return day
+def get_datetime():
+    """Returns the time"""
+    time = datetime.datetime.now()
+    return time
 
 
-def convert_date_to_valid_name(date):
+def convert_datetime_to_valid_date(date):
     """Given a date by datetime.datetime.now(), convert it into a valid name for txt files"""
     date = date.strftime("%x") + ".txt"
     date = date.replace("/", "-")
     return date
+
+
+def get_time(date):
+    """Given datetime by datetime.datetime.now() returns time"""
+    return date.strftime("%X")
 
 
 def print_date(date):
@@ -72,12 +75,15 @@ def record_activity(activity, time_spent, filename):
     else:
         f = open(filename, "w")
 
-    # checks the current time
-    t = datetime.datetime.now()
+    # finds current time
+    time = get_time(get_datetime())
 
     # records the activity and time spent with the time when the activity was completed
-    f.write(t.strftime("%X") + ": " + activity + ": " + str(time_spent))
+    f.write(time + ": " + activity + ": " + str(time_spent))
     f.close()
+
+    # updates reward point document
+    update_reward_points(None, time_spent, time, rewards_doc)
 
 
 def view_activities(filename):
@@ -144,16 +150,17 @@ def organize_document(filename):
 
     # writes the dictionary on the document now with activities' times collected
     new = open(filename, "w")
-    t = datetime.datetime.now()
+    time = get_time(get_datetime())
+
     for key in dict:
-        new.write(t.strftime("%X") + ": " + key + ": " + str(dict[key]) + "\n")
+        new.write(time + ": " + key + ": " + str(dict[key]) + "\n")
     new.close()
 
     print_date(filename)
     print("Successfully organized")
 
 
-def update_reward_points(activity_type, time_spent, rewards_doc):
+def update_reward_points(activity_type, time_spent, time, rewards_doc):
     """changes the rewards document values based on activity data"""
     f = open(rewards_doc)
     f_lines = f.readlines()
@@ -169,7 +176,12 @@ def update_reward_points(activity_type, time_spent, rewards_doc):
     # Adds points based on time spent to temporary data
     dict["Experience"] += time_spent * 50
     dict["Luxury Points"] += (time_spent // 4) ** 2
-    dict["Health"] += time_spent * 10
+
+    if int(time[0:2]) >= 22 or int(time[0:2]) <= 6:
+        dict["Health"] -= time_spent * 10
+
+    else:
+        dict["Health"] += time_spent * 30
 
     # reopens rewards document and rewrites temporary data
     new = open(rewards_doc, "w")
@@ -189,7 +201,8 @@ def create_awards_file():
 #   Add reward prizes purchased with points and different trophies for xp gained in a day, motivation, etc.
 #   Penalize for spending too much time in bad categories
 #
-# TODO: Separate daily documents into two parts, one that tracks the total times of different activities sorted into categories,
+# TODO: Separate daily documents into two parts,
+#   one that tracks the total times of different activities sorted into categories,
 #   one that is a time log of activities
 #   Use the part with total times of different activities to graph, with different bar colours for different categories
 #   Calculate a daily productivity rating and other statistics
@@ -197,9 +210,11 @@ def create_awards_file():
 
 # TODO: create calendar which shows activities done in a day
 
+# TODO: improve simplistic rewards system to subtract points based on time spent in sleeping hours
+
 
 if __name__ == "__main__":
-    date = convert_date_to_valid_name(get_date())
+    date = convert_datetime_to_valid_date(get_datetime())
     print_date(date)
     rewards_doc = "Rewards.txt"
     initialize(date, rewards_doc)
