@@ -17,25 +17,25 @@ def initialize(date, rewards_doc):
         print("")
         action = input("Action\n")
 
-        if action == "1": # record
+        if action == "1":  # record
             # Receives user inputs relating to activity data and stores them in variables 'activity' and 'time_spent'
             print("Enter activity details\n")
             activity = input("Activity - ")
             time_spent = int(input("Time Spent (minutes) - "))
 
             # records activity data in daily document
-            record_activity(activity, time_spent, date)
+            record_activity(activity, time_spent, date, rewards_doc)
 
-        elif action == "2": # view
+        elif action == "2":  # view
             view_activities(date)
 
-        elif action == "3": # graph
+        elif action == "3":  # graph
             graph_activities(date)
 
-        elif action == "4": # organize
+        elif action == "4":  # organize
             organize_document(date)
 
-        else: # close
+        else:  # close
             break
 
         print("\n")
@@ -49,9 +49,7 @@ def get_datetime():
 
 def convert_datetime_to_valid_date(date):
     """Given a date by datetime.datetime.now(), convert it into a valid name for txt files"""
-    date = date.strftime("%x") + ".txt"
-    date = date.replace("/", "-")
-    return date
+    return date.strftime("%x").replace("/", "-") + ".txt"
 
 
 def get_time(date):
@@ -64,22 +62,22 @@ def print_date(date):
     print("Today's date: " + date)
 
 
-def record_activity(activity, time_spent, filename):
+def record_activity(activity, time_spent, filename, rewards_doc):
     """given an activity, time spent on activity, and the date in file name format,
     records the activity information on the file 'filename.txt'"""
     print_date(filename)
 
     # checks whether the file already exists or not, if not, creates a new file
-    if path.exists(filename):
-        f = open(filename, "a")
+    if path.exists("Activity Data/" + filename):
+        f = open("Activity Data/" + filename, "a")
     else:
-        f = open(filename, "w")
+        f = open("Activity Data/" + filename, "w")
 
     # finds current time
     time = get_time(get_datetime())
 
     # records the activity and time spent with the time when the activity was completed
-    f.write(time + ": " + activity + ": " + str(time_spent))
+    f.write(time + ": " + activity + ": " + str(time_spent) + "\n")
     f.close()
 
     # updates reward point document
@@ -91,8 +89,8 @@ def view_activities(filename):
     print_date(filename)
 
     # checks whether the day's file exists, then prints files' contents if it does
-    if path.exists(filename):
-        f = open(filename)
+    if path.exists("Activity Data/" + filename):
+        f = open("Activity Data/" + filename)
         text = f.read()
         f.close()
         print(text)
@@ -104,56 +102,56 @@ def view_activities(filename):
 
 def graph_activities(filename):
     """graphs the daily activities and times spent as a bar graph using data from a file"""
-
-    f = open(filename)
-    lines = f.readlines()
-
-    # creates lists of activities and times to use for graphing
-    activities = []
-    times = []
-
-    # adds activities and times into lists from the file
-    for line in lines:
-        line = line.replace("\n", "")
-        columns = line.split(": ")
-        activities.append(columns[1])
-        times.append(int(columns[2]))
-    f.close()
+    # gets total times of activities
+    totals = organize_data(filename)
 
     # creates and displays graph
-    index = np.arange(len(activities))
-    plt.bar(index, times)
+    plot(totals.keys(), totals.values(), filename)
+
+
+def plot(x, y, filename):
+    """Plots the x and y values on a bar graph"""
+    # creates and displays graph
+    index = np.arange(len(x))
+    plt.bar(index, y)
     plt.xlabel('Activity', fontsize=10)
     plt.ylabel('Time Spent', fontsize=10)
-    plt.xticks(index, activities, fontsize=8, rotation=30)
+    plt.xticks(index, x, fontsize=8, rotation=30)
     plt.title(filename)
     plt.show()
 
 
-def organize_document(filename):
-    """given a file with various activities and times,
-    combine all instances of the same activity together and add all times up"""
-    f = open(filename)
+def organize_data(filename):
+    """Combines all instances of the same activity together and returns a dictionary with total times"""
+    f = open("Activity Data/" + filename)
     lines = f.readlines()
 
-    dict = {}
+    totals = {}
 
     for line in lines:
         line = line.replace("\n", "")
         columns = line.split(": ")
         # adds activities as keys in a dictionary, or if the key already exists, add the time onto the value of that key
-        if columns[1] in dict:
-            dict[columns[1]] += int(columns[2])
+        if columns[1] in totals:
+            totals[columns[1]] += int(columns[2])
         else:
-            dict[columns[1]] = int(columns[2])
+            totals[columns[1]] = int(columns[2])
     f.close()
 
+    return totals
+
+
+def organize_document(filename):
+    """given a file with various activities and times,
+    combine all instances of the same activity together and add all times up"""
+    new_activity_times = organize_data(filename)
+
     # writes the dictionary on the document now with activities' times collected
-    new = open(filename, "w")
+    new = open("Activity Data/" + filename, "w")
     time = get_time(get_datetime())
 
-    for key in dict:
-        new.write(time + ": " + key + ": " + str(dict[key]) + "\n")
+    for key in new_activity_times:
+        new.write(time + ": " + key + ": " + str(new_activity_times[key]) + "\n")
     new.close()
 
     print_date(filename)
@@ -166,27 +164,27 @@ def update_reward_points(activity_type, time_spent, time, rewards_doc):
     f_lines = f.readlines()
 
     # stores all information of the text file temporarily before being updated
-    dict = {}
+    points = {}
     for line in f_lines:
         line = line.replace("\n", "")
         columns = line.split(": ")
-        dict[columns[0]] = int(columns[1])
+        points[columns[0]] = int(columns[1])
     f.close()
 
     # Adds points based on time spent to temporary data
-    dict["Experience"] += time_spent * 50
-    dict["Luxury Points"] += (time_spent // 4) ** 2
+    points["Experience"] += time_spent * 50
+    points["Luxury Points"] += (time_spent // 4) ** 2
 
     if int(time[0:2]) >= 22 or int(time[0:2]) <= 6:
-        dict["Health"] -= time_spent * 10
+        points["Health"] -= time_spent * 10
 
     else:
-        dict["Health"] += time_spent * 30
+        points["Health"] += time_spent * 30
 
     # reopens rewards document and rewrites temporary data
     new = open(rewards_doc, "w")
-    for key in dict:
-        new.write(key + ": " + str(dict[key]) + "\n")
+    for key in points:
+        new.write(key + ": " + str(points[key]) + "\n")
     new.close()
 
 
