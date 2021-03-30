@@ -1,8 +1,9 @@
+import matplotlib.pyplot as plt
 import datetime
+import time
 from os import path
 import numpy as np
-import matplotlib.pyplot as plt
-
+from playsound import playsound
 
 def initialize(date, rewards_doc):
     """Runs main program loop that allows functions to be used as user inputs"""
@@ -13,6 +14,7 @@ def initialize(date, rewards_doc):
         print("2 - View")
         print("3 - Graph")
         print("4 - Organize")
+        print("5 - Pomodoro")
         print("Press any other key to close")
         print("")
         action = input("Action\n")
@@ -34,6 +36,9 @@ def initialize(date, rewards_doc):
 
         elif action == "4":  # organize
             organize_document(date)
+
+        elif action == "5": # pomodoro
+            start_pomodoro(date)
 
         else:  # close
             break
@@ -156,6 +161,29 @@ def organize_document(filename):
 
     print_date(filename)
     print("Successfully organized")
+
+
+def start_pomodoro(filename):
+    """"Starts a pomodoro timer and records activity after completion"""
+    print("Enter activity\n")
+    activity = input("Activity - ")
+    pomodoro_time = int(input("Total time (minutes)- "))
+
+    while pomodoro_time < 25:
+        pomodoro_time = int(input("Total time must be at least 25 minutes: "))
+
+    print("Starting timer")
+    time.sleep(pomodoro_time * 50)
+
+    record_activity(activity + " + pomodoro", int(pomodoro_time * (5/6)), filename, rewards_doc)
+
+    print("Starting break")
+#     playsound(".wav")
+    time.sleep(pomodoro_time * 10 - 223)
+
+    record_activity("pomodoro break", int(pomodoro_time * (1/6)), filename, rewards_doc)
+
+    print("Finished")
 
 
 def update_reward_points(activity_type, time_spent, time, rewards_doc):
