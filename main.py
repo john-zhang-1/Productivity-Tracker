@@ -5,6 +5,7 @@ from os import path
 import numpy as np
 from playsound import playsound
 
+
 def initialize(date, rewards_doc):
     """Runs main program loop that allows functions to be used as user inputs"""
 
@@ -15,8 +16,8 @@ def initialize(date, rewards_doc):
         print("3 - Graph")
         print("4 - Organize")
         print("5 - Pomodoro")
-        print("Press any other key to close")
-        print("")
+        print("Press any other key to close\n")
+
         action = input("Action\n")
 
         if action == "1":  # record
@@ -37,7 +38,7 @@ def initialize(date, rewards_doc):
         elif action == "4":  # organize
             organize_document(date)
 
-        elif action == "5": # pomodoro
+        elif action == "5":  # pomodoro
             start_pomodoro(date)
 
         else:  # close
@@ -48,8 +49,8 @@ def initialize(date, rewards_doc):
 
 def get_datetime():
     """Returns the time"""
-    time = datetime.datetime.now()
-    return time
+    cur_time = datetime.datetime.now()
+    return cur_time
 
 
 def convert_datetime_to_valid_date(date):
@@ -79,14 +80,14 @@ def record_activity(activity, time_spent, filename, rewards_doc):
         f = open("Activity Data/" + filename, "w")
 
     # finds current time
-    time = get_time(get_datetime())
+    cur_time = get_time(get_datetime())
 
     # records the activity and time spent with the time when the activity was completed
-    f.write(time + ": " + activity + ": " + str(time_spent) + "\n")
+    f.write(cur_time + ": " + activity + ": " + str(time_spent) + "\n")
     f.close()
 
     # updates reward point document
-    update_reward_points(None, time_spent, time, rewards_doc)
+    update_reward_points(time_spent, cur_time, rewards_doc)
 
 
 def view_activities(filename):
@@ -136,7 +137,8 @@ def organize_data(filename):
     for line in lines:
         line = line.replace("\n", "")
         columns = line.split(": ")
-        # adds activities as keys in a dictionary, or if the key already exists, add the time onto the value of that key
+        # adds activities as keys in a dictionary,
+        # or if the key already exists, add the time onto the value of that key
         if columns[1] in totals:
             totals[columns[1]] += int(columns[2])
         else:
@@ -153,10 +155,10 @@ def organize_document(filename):
 
     # writes the dictionary on the document now with activities' times collected
     new = open("Activity Data/" + filename, "w")
-    time = get_time(get_datetime())
+    cur_time = get_time(get_datetime())
 
     for key in new_activity_times:
-        new.write(time + ": " + key + ": " + str(new_activity_times[key]) + "\n")
+        new.write(cur_time + ": " + key + ": " + str(new_activity_times[key]) + "\n")
     new.close()
 
     print_date(filename)
@@ -175,18 +177,18 @@ def start_pomodoro(filename):
     print("Starting timer")
     time.sleep(pomodoro_time * 50)
 
-    record_activity(activity + " + pomodoro", int(pomodoro_time * (5/6)), filename, rewards_doc)
+    record_activity(activity + " + pomodoro", int(pomodoro_time * (5 / 6)), filename, cur_rewards_doc)
 
     print("Starting break")
-#     playsound(".wav")
+    # playsound("add_your_own_song.wav")
     time.sleep(pomodoro_time * 10 - 223)
 
-    record_activity("pomodoro break", int(pomodoro_time * (1/6)), filename, rewards_doc)
+    record_activity("pomodoro break", int(pomodoro_time * (1 / 6)), filename, cur_rewards_doc)
 
     print("Finished")
 
 
-def update_reward_points(activity_type, time_spent, time, rewards_doc):
+def update_reward_points(time_spent, cur_time, rewards_doc):
     """changes the rewards document values based on activity data"""
     f = open(rewards_doc)
     f_lines = f.readlines()
@@ -203,7 +205,7 @@ def update_reward_points(activity_type, time_spent, time, rewards_doc):
     points["Experience"] += time_spent * 50
     points["Luxury Points"] += (time_spent // 4) ** 2
 
-    if int(time[0:2]) >= 22 or int(time[0:2]) <= 6:
+    if int(cur_time[0:2]) >= 22 or int(cur_time[0:2]) <= 6:
         points["Health"] -= time_spent * 10
 
     else:
@@ -216,7 +218,7 @@ def update_reward_points(activity_type, time_spent, time, rewards_doc):
     new.close()
 
 
-def create_awards_file():
+def create_rewards_file():
     """Creates the rewards file and sets it up"""
 
     pass
@@ -236,11 +238,9 @@ def create_awards_file():
 
 # TODO: create calendar which shows activities done in a day
 
-# TODO: improve simplistic rewards system to subtract points based on time spent in sleeping hours
-
 
 if __name__ == "__main__":
-    date = convert_datetime_to_valid_date(get_datetime())
-    print_date(date)
-    rewards_doc = "Rewards.txt"
-    initialize(date, rewards_doc)
+    cur_date = convert_datetime_to_valid_date(get_datetime())
+    print_date(cur_date)
+    cur_rewards_doc = "Rewards.txt"
+    initialize(cur_date, cur_rewards_doc)
